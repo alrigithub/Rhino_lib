@@ -77,53 +77,94 @@
 
 ```
 import rhinoscriptsyntax as rs
+import os
 
-# Line Commands
-rs.AddAlias("L", "'_Line")
-rs.AddAlias("SL", "'_Split")
-rs.AddAlias("TR", "'_Connect")
-rs.AddAlias("TT", "'_Trim")
+def set_alias(alias, macro):
+    # Deletes alias if it exists to ensure a clean update
+    if rs.IsAlias(alias):
+        rs.DeleteAlias(alias)
+    rs.AddAlias(alias, macro)
+    print("Set Alias: {} -> {}".format(alias, macro))
 
-# View Commands
-rs.AddAlias("H", "'_Hide")
-rs.AddAlias("HI", "'_Isolate")
-rs.AddAlias("LO", "'_OneLayerOff")
-rs.AddAlias("WW", "'_CPlane _World _Top")
-rs.AddAlias("ZS", "'_Zoom _Selected")
+# --- CONFIGURATION ---
 
-# Transform Commands
-rs.AddAlias("M", "'_Move")
-rs.AddAlias("E", "'_PushPull")
-rs.AddAlias("EC", "'_ExtrudeCrv")
-rs.AddAlias("ES", "'_ExtrudeSrf")
-rs.AddAlias("E", "'_Explode")
-rs.AddAlias("ESrf", "'_DupBorder _SelLast _PlanarSrf _SelPrev _Delete _SelLast")
-rs.AddAlias("P", "'_Planar")
-rs.AddAlias("PC", "'_ProjectToCPlane _Yes")
-rs.AddAlias("PS", "'_PlanarSrf _SelLast _MergeAllEdges")
-rs.AddAlias("J", "'_Join")
-rs.AddAlias("JJ", "'_MergeAllCoplanarFaces")
-rs.AddAlias("JJJ", "'_MergeAllEdges")
+# 1. Base path for your custom scripts
+# Note: We use 'r' before the string to handle backslashes correctly
+script_path = r"C:\Users\ritiv\Desktop\(RiR) Developement\Rhino Drafting\Scripts"
 
+# 2. Standard Aliases Dictionary
+settings = {
+    # Line Commands
+    "L": "'_Line",
+    "SL": "'_Split",
+    "TR": "'_Connect",
+    "TT": "'_Trim",
+    
+    # View Commands
+    "H": "'_Hide",
+    "HI": "'_Isolate",
+    "LO": "'_OneLayerOff",
+    "WW": "'_CPlane _World _Top",
+    "ZS": "'_Zoom _Selected",
+    
+    # Transform Commands
+    "M": "'_Move",
+    "EP": "'_PushPull", # Changed from 'E' to 'EP' to avoid conflict with Explode
+    "EC": "'_ExtrudeCrv",
+    "ES": "'_ExtrudeSrf",
+    "E": "'_Explode",
+    "ESrf": "'_DupBorder _SelLast _PlanarSrf _SelPrev _Delete _SelLast",
+    "P": "'_Planar",
+    "PC": "'_ProjectToCPlane _Yes",
+    "PS": "'_PlanarSrf _SelLast _MergeAllEdges",
+    "J": "'_Join",
+    "JJ": "'_MergeAllCoplanarFaces",
+    "JJJ": "'_MergeAllEdges",
+    
+    # Boolean Commands
+    "BS": "'_BooleanSplit",
+    "BU": "'_BooleanUnion _MergeAllEdges _MergeAllCoplanarFaces",
+    "BD": "'_BooleanDifference"
+}
 
-# Boolean Commands
-rs.AddAlias("BS", "'_BooleanSplit")
-rs.AddAlias("BU", "'_BooleanUnion _MergeAllEdges _MergeAllCoplanarFaces")
-rs.AddAlias("BD", "'_BooleanDifference")
+# 3. Custom Python Script Names
+# These will be registered using the script name as the Alias
+custom_scripts = [
+    "ARI_BLOCK_SuperSelectBlocks",
+    "ARI_CRV_SplitAllIntersections",
+    "ARI_GEO_CappedSlice",
+    "ARI_GEO_Check",
+    "ARI_GEO_CleanUnion",
+    "ARI_LAYER_IFCandBeamLayers",
+    "ARI_OBJ_ObjMoveToLayerByType",
+    "ARI_SHORTCUTS_Load",
+    "ARI_SRF_CrvHorizontalPlane",
+    "ARI_SRF_CrvVerticalPlane",
+    "ARI_SRF_PlanarPlaneFromCrv"
+]
 
-# -----
+# --- EXECUTION ---
 
-# Add keyboard shortcuts for view commands
-# This command might require manual entry if the RhinoScript API does not support direct shortcut bindings.
-# Use this as a guide for setting up shortcuts manually.
+print("--- Starting Alias Configuration ---")
 
-rs.Command("'_OptionsPage '_Keyboard")
-rs.Command("'_OptionsPage '_Keyboard '_NewShortcut Ctrl+D '_Macro ''_CPlane '_Object")
-rs.Command("'_OptionsPage '_Keyboard '_NewShortcut Ctrl+1 '_Macro ''_CPlane '_World '_Top")
-rs.Command("'_OptionsPage '_Keyboard '_NewShortcut Ctrl+2 '_Macro ''_CPlane '_World '_Front")
-rs.Command("'_OptionsPage '_Keyboard '_NewShortcut Ctrl+3 '_Macro ''_CPlane '_World '_Right")
-rs.Command("'_OptionsPage '_Keyboard '_NewShortcut Ctrl+4 '_Macro ''_CPlane '_World '_Back")
-rs.Command("'_OptionsPage '_Keyboard '_NewShortcut Ctrl+5 '_Macro ''_CPlane '_World '_Left")
+# Set Standard Aliases
+for alias, macro in settings.items():
+    set_alias(alias, macro)
+
+# Set Custom Script Aliases
+for script_name in custom_scripts:
+    # Construct the full file path
+    full_file_path = os.path.join(script_path, script_name + ".py")
+    
+    # Check if file actually exists to avoid broken aliases
+    if os.path.exists(full_file_path):
+        # Create the macro string: ! _-RunPythonScript "Path"
+        macro = '! _-RunPythonScript "{}"'.format(full_file_path)
+        set_alias(script_name, macro)
+    else:
+        print("WARNING: Could not find script at: {}".format(full_file_path))
+
+print("--- Aliases Loaded Successfully ---")
 
 
 ```
